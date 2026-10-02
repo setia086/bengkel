@@ -1,0 +1,18 @@
+$kind: http-request
+name: New Request
+url: httpPOST http://localhost:3000/api/auth/login
+method: GET
+body:
+  type: json
+  content: "{\r
+
+    \  \"email\": \"admin@bengkel.com\",\r
+
+    \  \"password\": \"admin123\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{json_web_token_0g8t}}"
+order: 1785413846943

@@ -1,0 +1,145 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  nama       String
+  email      String   @unique
+  password   String
+  role       String   @default("user")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  pelanggan  Pelanggan?
+}
+
+
+model Pelanggan {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @unique
+  nama        String
+  telepon     String?  @unique
+  alamat      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  kendaraan   Kendaraan[]
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Kendaraan {
+  id            Int      @id @default(autoincrement())
+  pelangganId   Int
+  platNomor     String   @unique
+  merk          String
+  tipe          String
+  tahun         Int?
+  warna         String?
+  nomorRangka   String?
+  nomorMesin    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  pelanggan     Pelanggan @relation(fields: [pelangganId], references: [id], onDelete: Cascade)
+  servis         Servis[]
+}
+
+model Mekanik {
+  id          Int      @id @default(autoincrement())
+  nama        String
+  telepon     String?  @unique
+  spesialis   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  servis      Servis[]
+}
+
+model KategoriSparepart {
+  id          Int      @id @default(autoincrement())
+  nama        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sparepart   Sparepart[]
+}
+
+model Sparepart {
+  id               Int      @id @default(autoincrement())
+  kategoriId       Int
+  nama             String
+  merk             String?
+  stok             Int      @default(0)
+  harga            Decimal  @db.Decimal(12,2)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  kategori         KategoriSparepart @relation(fields: [kategoriId], references: [id])
+
+  detailSparepart  DetailSparepart[]
+}
+
+model Servis {
+  id            Int      @id @default(autoincrement())
+  kodeServis    String   @unique
+  kendaraanId   Int
+  mekanikId     Int
+  tanggal       DateTime @default(now())
+  keluhan       String?
+  kilometer     Int?
+  status        String   @default("Menunggu")
+  totalBiaya    Decimal  @default(0) @db.Decimal(12,2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  kendaraan     Kendaraan @relation(fields: [kendaraanId], references: [id])
+  mekanik       Mekanik   @relation(fields: [mekanikId], references: [id])
+
+  detailServis     DetailServis[]
+  detailSparepart  DetailSparepart[]
+  pembayaran       Pembayaran?
+}
+
+model DetailServis {
+  id            Int      @id @default(autoincrement())
+  servisId      Int
+  namaPekerjaan String
+  biaya         Decimal  @db.Decimal(12,2)
+
+  servis         Servis @relation(fields: [servisId], references: [id], onDelete: Cascade)
+}
+
+model DetailSparepart {
+  id            Int      @id @default(autoincrement())
+  servisId      Int
+  sparepartId   Int
+  jumlah        Int
+  harga         Decimal  @db.Decimal(12,2)
+  subtotal      Decimal  @db.Decimal(12,2)
+
+  servis         Servis    @relation(fields: [servisId], references: [id], onDelete: Cascade)
+  sparepart      Sparepart @relation(fields: [sparepartId], references: [id])
+}
+
+model Pembayaran {
+  id            Int      @id @default(autoincrement())
+  servisId      Int      @unique
+  metode        String
+  total         Decimal  @db.Decimal(12,2)
+  dibayar       Decimal  @db.Decimal(12,2)
+  kembalian     Decimal  @db.Decimal(12,2)
+  status        String   @default("Lunas")
+  tanggalBayar  DateTime @default(now()) 
+  servis        Servis @relation(fields: [servisId], references: [id], onDelete: Cascade)
+}
